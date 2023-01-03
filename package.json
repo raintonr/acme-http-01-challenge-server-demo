@@ -1,0 +1,14 @@
+{
+    "name": "acme-test",
+    "version": "0.0.1",
+    "main": "acme-test.js",
+    "dependencies": {
+        "acme": "*",
+        "dotenv": "*",
+        "http": "*"
+    },
+    "scripts": {
+        "start": "node acme-test.js"
+    },
+    "author": "Robin Rainton <robin@rainton.com>"
+}
