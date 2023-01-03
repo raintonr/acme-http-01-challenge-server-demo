@@ -2,34 +2,39 @@
 
 'use strict';
 
-const _memdb = {};
-
 const http = require('http');
-const challengeServer = http.createServer();
-challengeServer.on('request', (req, res) => {
-    let response = '';
-    console.log('challengeServer request: ' + req.url);
-    const regexp = /^\/.well-known\/acme-challenge\/(.*)/;
-    const matches = req.url.match(regexp);
-    if (matches === null || !Array.isArray(matches) || matches.length != 2) {
-        console.log("Request doesn't look like ACME challenge");
-    } else {
-        const token = matches[1];
-        console.log('Got challenge for ' + token);
-        const tokenChallenge = _memdb[token];
-        if (!tokenChallenge) {
-            console.warn('token not in DB: ' + token);
-        } else {
-            response = tokenChallenge.keyAuthorization;
-        }
-    }
-    res.end(response);
-});
+
+// Yes, yes, no-one likes globals :P
+const _memdb = {};
+let challengeServer = null;
 
 function _getChallengeKey(data) {
     return data.challenge.token;
     var ch = data.challenge;
     return ch.identifier.value + '#' + ch.token;
+}
+
+function _createChallengeServer() {
+    challengeServer = http.createServer();
+    challengeServer.on('request', (req, res) => {
+        let response = '';
+        console.log('challengeServer request: ' + req.url);
+        const regexp = /^\/.well-known\/acme-challenge\/(.*)/;
+        const matches = req.url.match(regexp);
+        if (matches === null || !Array.isArray(matches) || matches.length != 2) {
+            console.warn("Request doesn't look like ACME challenge");
+        } else {
+            const token = matches[1];
+            console.log('Got challenge for ' + token);
+            const tokenChallenge = _memdb[token];
+            if (!tokenChallenge) {
+                console.warn('token not in DB: ' + token);
+            } else {
+                response = tokenChallenge.keyAuthorization;
+            }
+        }
+        res.end(response);
+    });
 }
 
 const _init = (opts) => {
@@ -39,6 +44,7 @@ const _init = (opts) => {
             console.log('No challngeServer address/port - ignoring');
             resolve(null);
         } else {
+            _createChallengeServer();
             challengeServer.listen(opts.challengeServerPort, opts.challengeServerAddress, (err) => {
                 if (err) {
                     console.error(err);
@@ -85,8 +91,13 @@ const _remove = (data) => {
 }
 
 const _shutdown = () => {
-    console.log('Shutting down challengeServer');
-    challengeServer.close();
+    if (!challengeServer) {
+        console.warn('Shutdown called but nothing to do');
+    } else {
+        console.log('Shutting down challengeServer');
+        challengeServer.close();
+        // Technically one should free up _memdb here too
+    }
 }
 
 module.exports.create = function (config) {
