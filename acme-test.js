@@ -6,13 +6,6 @@ const http01Challenge = require('./http-01-challenge-server').create();
 http01Challenge.init(options);
 
 async function main() {
-    require('dotenv').config();
-
-    const fs = require('fs');
-    // just to trigger the warning message out of the way
-    await fs.promises.readFile().catch(function () { });
-    console.warn('\n');
-
     var pkg = require('./package.json');
     var packageAgent = 'test-' + pkg.name + '/' + pkg.version;
 
@@ -44,12 +37,6 @@ async function main() {
 
     var agreeToTerms = true;
 
-    // If you are multi-tenanted or white-labled and need to present the terms of
-    // use to the Subscriber running the service, you can do so with a function.
-    var agreeToTerms = async function () {
-        return true;
-    };
-
     console.info('registering new ACME account...');
     var account = await acme.accounts.create({
         subsciberEmail: options.subscriberEmail,
@@ -65,8 +52,6 @@ async function main() {
     var serverKeypair = await Keypairs.generate({ kty: 'RSA', format: 'jwk' });
     var serverKey = serverKeypair.private;
     var serverPem = await Keypairs.export({ jwk: serverKey });
-    await fs.promises.writeFile('./privkey.pem', serverPem, 'ascii');
-
     var serverKey = await Keypairs.import({ pem: serverPem });
 
     var CSR = require('@root/csr');
@@ -90,11 +75,10 @@ async function main() {
         domains: options.domains,
         challenges
     });
-    var fullchain = pems.cert + '\n' + pems.chain + '\n';
+    // const  fullchain = pems.cert + '\n' + pems.chain + '\n';
 
-    console.log('Done. Private Key:');
+    console.log('Done.');
     console.log(serverPem);
-    console.log('Cert:');
     console.log(pems.cert);
 
     // Terminate our server

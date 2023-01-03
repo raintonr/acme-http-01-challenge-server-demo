@@ -4,7 +4,6 @@
     "main": "acme-test.js",
     "dependencies": {
         "acme": "*",
-        "dotenv": "*",
         "http": "*"
     },
     "scripts": {
