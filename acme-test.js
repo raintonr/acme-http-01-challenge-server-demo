@@ -24,7 +24,7 @@ async function main() {
     var Keypairs = require('@root/keypairs');
 
     const ACME = require('acme');
-    var acme = ACME.create({ maintainerEmail: options.maintainerEmail, packageAgent, notify, debug: true });
+    var acme = ACME.create({ maintainerEmail: options.email, packageAgent, notify, debug: true });
     await acme.init(directoryUrl);
 
     // You only need ONE account key, ever, in most cases
@@ -39,7 +39,7 @@ async function main() {
 
     console.info('registering new ACME account...');
     var account = await acme.accounts.create({
-        subsciberEmail: options.subscriberEmail,
+        subsciberEmail: options.email,
         agreeToTerms,
         accountKey
     });
