@@ -1,0 +1,8 @@
+{
+    "email": "you@yourdomain.com",
+    "domains": [
+        "your.public.fqdn"
+    ],
+    "challengeServerPort": 80,
+    "challengeServerAddress": "0.0.0.0"
+}
