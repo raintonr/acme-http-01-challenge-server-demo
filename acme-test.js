@@ -1,3 +1,5 @@
+// Based https://www.npmjs.com/package/acme (examples/get-certificate-full.js)
+
 'use strict';
 
 const options = require('./options.json');

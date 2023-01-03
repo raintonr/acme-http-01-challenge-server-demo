@@ -1,3 +1,5 @@
+// Based on https://www.npmjs.com/package/acme-http-01-standalone
+
 'use strict';
 
 const _memdb = {};
