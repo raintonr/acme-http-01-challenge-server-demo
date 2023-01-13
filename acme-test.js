@@ -4,8 +4,36 @@
 
 const options = require('./options.json');
 
-const http01Challenge = require('./http-01-challenge-server').create();
-http01Challenge.init(options);
+// Create/init challenge plugins
+
+const challenges = [];
+const toShutdown = [];
+for (const [type, details] of Object.entries(options.challenges)) {
+    if (details.active) {
+        console.log('Init challenge ' + type);
+        const thisChallenge = require(details.module).create(details.createOptions);
+        challenges[type] = thisChallenge;
+        if (details.addProperties) {
+            for (const [key, value] of Object.entries(details.addProperties)) {
+                console.log(`Adding ${key} = ${value}`);
+                thisChallenge[key] = value;
+            }
+        }
+        if (thisChallenge.shutdown) {
+            console.log('This will need shutdown later');
+            toShutdown.push(thisChallenge);
+        }
+    }
+}
+
+// Terminate challenges
+// 'shutdown' is non-standard but added for our http-01-challenge-server
+function shutdownChallenges() {
+    console.log('Shutdown...');
+    for (const challenge of toShutdown) {
+        challenge.shutdown();
+    }
+}
 
 async function main() {
     var pkg = require('./package.json');
@@ -65,10 +93,6 @@ async function main() {
     var csrDer = await CSR.csr({ jwk: serverKey, domains: options.domains, encoding });
     var csr = PEM.packBlock({ type: typ, bytes: csrDer });
 
-    var challenges = {
-        'http-01': http01Challenge
-    };
-
     console.info('validating domain authorization for ' + options.domains.join(' '));
     var pems = await acme.certificates.create({
         account,
@@ -83,11 +107,11 @@ async function main() {
     console.log(serverPem);
     console.log(pems.cert);
 
-    // Terminate our server
-    http01Challenge.shutdown();
+    shutdownChallenges();
 }
 
 main().catch(function (e) {
+    console.error('Failed!');
     console.error(e.stack);
-    http01Challenge.shutdown();
+    shutdownChallenges();
 });
