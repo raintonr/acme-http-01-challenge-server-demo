@@ -4,6 +4,7 @@
     "main": "acme-test.js",
     "dependencies": {
         "acme": "*",
+        "acme-dns-01-namecheap": "*",
         "http": "*"
     },
     "scripts": {
