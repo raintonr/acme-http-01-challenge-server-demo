@@ -6,7 +6,8 @@ const http = require('http');
 
 // Yes, yes, no-one likes globals :P
 const _memdb = {};
-let challengeServer = null;
+let _challengeServer = null;
+let _config = null;
 
 function _getChallengeKey(data) {
     return data.challenge.token;
@@ -15,8 +16,8 @@ function _getChallengeKey(data) {
 }
 
 function _createChallengeServer() {
-    challengeServer = http.createServer();
-    challengeServer.on('request', (req, res) => {
+    _challengeServer = http.createServer();
+    _challengeServer.on('request', (req, res) => {
         let response = '';
         console.log('challengeServer request: ' + req.url);
         const regexp = /^\/.well-known\/acme-challenge\/(.*)/;
@@ -40,17 +41,17 @@ function _createChallengeServer() {
 const _init = (opts) => {
     console.log('init: ' + JSON.stringify(opts));
     return new Promise((resolve, reject) => {
-        if (!opts.challengeServerAddress || !opts.challengeServerPort) {
-            console.log('No challngeServer address/port - ignoring');
+        if (_challengeServer != null) {
+            console.warn('Server already running!');
             resolve(null);
         } else {
             _createChallengeServer();
-            challengeServer.listen(opts.challengeServerPort, opts.challengeServerAddress, (err) => {
+            _challengeServer.listen(_config.port, _config.address, (err) => {
                 if (err) {
                     console.error(err);
                     reject(err);
                 } else {
-                    console.log('challengeServer listening on ' + opts.challengeServerPort);
+                    console.log(`challengeServer listening on ${_config.address}/${_config.port}`);
                     resolve(null);
                 }
             });
@@ -91,16 +92,17 @@ const _remove = (data) => {
 }
 
 const _shutdown = () => {
-    if (!challengeServer) {
+    if (!_challengeServer) {
         console.warn('Shutdown called but nothing to do');
     } else {
         console.log('Shutting down challengeServer');
-        challengeServer.close();
+        _challengeServer.close();
         // Technically one should free up _memdb here too
     }
 }
 
 module.exports.create = function (config) {
+    _config = config;
     return {
         init: _init,
         set: _set,
