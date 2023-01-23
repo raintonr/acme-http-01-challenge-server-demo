@@ -1,0 +1,31 @@
+{
+    "email": "you@yourdomain.com",
+    "domains": [
+        "your.public.fqdn"
+    ],
+    "challenges": {
+        "_comment": "At least one of these needs active: true",
+        "http-01": {
+            "active": false,
+            "module": "./http-01-challenge-server",
+            "createOptions": {
+                "port": 80,
+                "address": "0.0.0.0"
+            }
+        },
+        "dns-01": {
+            "active": true,
+            "module": "acme-dns-01-namecheap",
+            "createOptions": {
+                "apiUser": "",
+                "apiKey": "",
+                "clientIp": "",
+                "username": "",
+                "baseUrl": "https://api.namecheap.com/xml.response"
+            },
+            "addProperties": {
+                "propagationDelay": 40000
+            }
+        }
+    }
+}
